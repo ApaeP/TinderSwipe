@@ -5,20 +5,35 @@ export default class extends Controller {
   static targets = [ "card", "nopeBtn", "likeBtn" ]
 
   connect() {
-    this.initCards();
-    this.initSwipe();
+    this._initCards();
+    this._initSwipe();
 
     this.nopeBtnTarget.addEventListener('click', (e) => {
-      this.createButtonListener(false, e)
+      this._createButtonListener(false, e)
     });
 
     this.likeBtnTarget.addEventListener('click', (e) => {
-      this.createButtonListener(true, e)
+      this._createButtonListener(true, e)
     });
+
+    this.likeEvent = new Event('liked');
+    this.dislikeEvent = new Event('disliked');
   }
 
-  initCards(card, index) {
-    var cards = this.cardTargets.filter(e => !e.classList.contains('removed'))
+  liked(elementId) {
+    document.dispatchEvent(this.likeEvent);
+    console.log(`liked id ${elementId}`)
+    // TODO your code when liked
+  }
+
+  disliked(elementId) {
+    document.dispatchEvent(this.dislikeEvent);
+    console.log(`disliked id ${elementId}`)
+    // TODO your code when disliked
+  }
+
+  _initCards(card, index) {
+    const cards = this._activeCards()
 
     cards.forEach((card, index) => {
       card.style.zIndex = cards.length - index;
@@ -29,89 +44,77 @@ export default class extends Controller {
     this.element.classList.add('loaded');
   }
 
-  initSwipe() {
+  _initSwipe() {
     this.cardTargets.forEach((el) => {
-      var hammertime = new Hammer(el);
+      const hammertime = new Hammer(el);
 
-      hammertime.on('pan', (event) => {
-        el.classList.add('moving');
-      });
+      this._listenToPan(hammertime, el)
+      this._listenToPanEnd(hammertime, el)
 
-      hammertime.on('pan', (event) => {
-        if (event.deltaX === 0) return;
-        if (event.center.x === 0 && event.center.y === 0) return;
-
-        this.element.classList.toggle('tinder_love', event.deltaX > 0);
-        this.element.classList.toggle('tinder_nope', event.deltaX < 0);
-
-        var xMulti = event.deltaX * 0.03;
-        var yMulti = event.deltaY / 80;
-        var rotate = xMulti * yMulti;
-
-        event.target.style.transform = 'translate(' + event.deltaX + 'px, ' + event.deltaY + 'px) rotate(' + rotate + 'deg)';
-      });
-
-      hammertime.on('panend', (event) => {
-        el.classList.remove('moving');
-        this.element.classList.remove('tinder_love');
-        this.element.classList.remove('tinder_nope');
-
-        var moveOutWidth = document.body.clientWidth;
-        var keep = Math.abs(event.deltaX) < 80 || Math.abs(event.velocityX) < 0.5;
-
-        if (!keep && event.additionalEvent === 'panright') {
-          this.liked(event.target.dataset.id)
-        } else if (!keep && event.additionalEvent === 'panleft') {
-          this.disliked(event.target.dataset.id)
-        }
-
-        event.target.classList.toggle('removed', !keep);
-
-        if (keep) {
-          event.target.style.transform = '';
-        } else {
-          var endX = Math.max(Math.abs(event.velocityX) * moveOutWidth, moveOutWidth);
-          var toX = event.deltaX > 0 ? endX : -endX;
-          var endY = Math.abs(event.velocityY) * moveOutWidth;
-          var toY = event.deltaY > 0 ? endY : -endY;
-          var xMulti = event.deltaX * 0.03;
-          var yMulti = event.deltaY / 80;
-          var rotate = xMulti * yMulti;
-
-          console.log(toX)
-
-
-          event.target.style.transform = 'translate(' + toX + 'px, ' + (toY + event.deltaY) + 'px) rotate(' + rotate + 'deg)';
-          this.initCards();
-        }
-      });
     });
   }
 
-  createButtonListener(love, event) {
-    const cards = this.cardTargets.filter(e => !e.classList.contains('removed'));
-    const moveOutWidth = document.body.clientWidth * 1.5;
+  _listenToPan(hammertime, el) {
+    hammertime.on('pan', (event) => {
+      if (event.deltaX === 0 || event.center.x === 0 && event.center.y === 0) return;
 
+      el.classList.add('moving');
+      el.classList.toggle('tinder_love', event.deltaX > 0);
+      el.classList.toggle('tinder_nope', event.deltaX < 0);
+
+      const rotate = event.deltaX * 0.03 * event.deltaY / 80;
+      event.target.style.transform = `translate(${event.deltaX}px, ${event.deltaY}px) rotate(${rotate}deg)`;
+    });
+  }
+
+  _listenToPanEnd(hammertime, el) {
+    hammertime.on('panend', (event) => {
+      el.classList.remove('moving', 'tinder_love', 'tinder_nope');
+
+      const moveOutWidth = document.body.clientWidth;
+      const keep = Math.abs(event.deltaX) < 80 || Math.abs(event.velocityX) < 0.5;
+
+      if (!keep && event.additionalEvent === 'panright') {
+        this.liked(event.target.dataset.id)
+      } else if (!keep && event.additionalEvent === 'panleft') {
+        this.disliked(event.target.dataset.id)
+      }
+
+      event.target.classList.toggle('removed', !keep);
+
+      if (keep) {
+        event.target.style.transform = '';
+      } else {
+        const endX = Math.max(Math.abs(event.velocityX) * moveOutWidth, moveOutWidth);
+        const toX = event.deltaX > 0 ? endX : -endX;
+        const endY = Math.abs(event.velocityY) * moveOutWidth;
+        const toY = event.deltaY > 0 ? endY : -endY;
+        const xMulti = event.deltaX * 0.03;
+        const yMulti = event.deltaY / 80;
+        const rotate = xMulti * yMulti;
+
+        event.target.style.transform = `translate(${toX}px, ${toY + event.deltaY}px) rotate(${rotate}deg)`;
+        this._initCards();
+      }
+    });
+  }
+
+  _createButtonListener(love, event) {
+    const cards = this._activeCards()
+    const moveOutWidth = document.body.clientWidth * 1.5;
     if (!cards.length) return false;
 
     const card = cards[0];
+    const minus = love ? '' : '-'
+
+    card.style.transform = `translate(${minus}${moveOutWidth}px, -100px) rotate(${minus}30deg)`;
     card.classList.add('removed');
 
-    if (love) {
-      card.style.transform = 'translate(' + moveOutWidth + 'px, -100px) rotate(-30deg)';
-    } else {
-      card.style.transform = 'translate(-' + moveOutWidth + 'px, -100px) rotate(30deg)';
-    }
-
-    this.initCards();
+    this._initCards();
     event.preventDefault();
   }
 
-  liked(elementId) {
-    console.log(`liked id ${elementId}`)
-  }
-
-  disliked(elementId) {
-    console.log(`disliked id ${elementId}`)
+  _activeCards() {
+    return this.cardTargets.filter(e => !e.classList.contains('removed'));
   }
 }

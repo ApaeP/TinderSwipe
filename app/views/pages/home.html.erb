@@ -1,17 +1,26 @@
 <div class="tinder" data-controller="swipe">
-  <div class="tinder--status">
-    <i class="fa fa-remove"></i>
-    <i class="fa fa-heart"></i>
-  </div>
 
   <div class="tinder--cards">
-    <% Card.all.each do |card| %>
-      <%= render 'pages/card', card: card %>
+    <% Element.all.each do |element| %>
+      <div class="tinder--card" data-swipe-target="card" data-id="<%= element.id %>">
+        <div class="tinder--status">
+          <i class="fa-solid fa-xmark"></i>
+          <i class="fa fa-heart"></i>
+        </div>
+        <img src="https://placeimg.com/600/300/people">
+        <h3><%= element.name %></h3>
+        <p><%= element.description %></p>
+      </div>
     <% end %>
   </div>
 
   <div class="tinder--buttons">
-    <button id="nope" data-swipe-target="nopeBtn"><i class="fa fa-remove"></i></button>
-    <button id="love" data-swipe-target="likeBtn"><i class="fa fa-heart"></i></button>
+    <button id="nope" data-swipe-target="nopeBtn">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <button id="love" data-swipe-target="likeBtn">
+      <i class="fa fa-heart"></i>
+    </button>
   </div>
+
 </div>

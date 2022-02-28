@@ -3,7 +3,7 @@
 #
 # Examples:
 User.destroy_all
-Card.destroy_all
+Element.destroy_all
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
 User.create!(email: 'test@test.com', password: 'azerty')
@@ -17,5 +17,5 @@ consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
 names.each do |e|
-  Card.create(name: e, description: desc)
+  Element.create(name: e, description: desc)
 end
