@@ -1,2 +1,17 @@
-<h1>Pages#home</h1>
-<p>Find me in app/views/pages/home.html.erb</p>
+<div class="tinder" data-controller="swipe">
+  <div class="tinder--status">
+    <i class="fa fa-remove"></i>
+    <i class="fa fa-heart"></i>
+  </div>
+
+  <div class="tinder--cards">
+    <% Card.all.each do |card| %>
+      <%= render 'pages/card', card: card %>
+    <% end %>
+  </div>
+
+  <div class="tinder--buttons">
+    <button id="nope" data-swipe-target="nopeBtn"><i class="fa fa-remove"></i></button>
+    <button id="love" data-swipe-target="likeBtn"><i class="fa fa-heart"></i></button>
+  </div>
+</div>
